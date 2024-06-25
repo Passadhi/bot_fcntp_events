@@ -1,4 +1,3 @@
-
 const TelegramBot = require('node-telegram-bot-api');
 
 // const token = '7436762406:AAHlkeqMQdalXJ3-OICv-Xw6Qc24faD8DQ0';
@@ -36,15 +35,21 @@ bot.on('callback_query', (query) => {
         inline_keyboard: directions.map(direction => [{ text: direction, callback_data: direction }]),
       }),
     };
+    
     bot.sendMessage(chatId, 'Выберите направление события:', keyboard);
   } 
+  
 
 else {
     userData.direction = query.data;
     userData.topic = '';
     userData.text = '';
     userData.photos = [];
+    
     bot.sendMessage(chatId, 'Введите тему:');
+  }
+  if (userData.direction) {
+  bot.sendMessage(chatId, `Вы выбрали:${userData.direction}`);
   }
 });
 
@@ -55,11 +60,16 @@ bot.on('message', (msg) => {
   
     if (!userData.direction) {
       userData.direction = text;
+      bot.sendMessage(chatId, `Вы выбрали:${userData.direction}`);
       bot.sendMessage(chatId, 'Введите тему:');
     } else if (!userData.topic) {
       userData.topic = text;
+      bot.sendMessage(chatId, 'Введите дату публикации:');
+    } else if (!userData.time) {
+      userData.time = text;
       bot.sendMessage(chatId, 'Введите текст:');
-    } else if (!userData.text) {
+    }
+    else if (!userData.text) {
       userData.text = text;
       bot.sendMessage(chatId, 'Загрузите  фотографии или нажмите на кнопку "Нет больше фото":',
       {
@@ -70,7 +80,7 @@ bot.on('message', (msg) => {
     }
       );
     } else if (
-        !userData.photos.length &&
+        !userData.photos &&
          msg.photo
          ) {
       const photoId = msg.photo[0].file_id;
@@ -89,7 +99,7 @@ bot.on('message', (msg) => {
       );
     } 
     else if (
-        userData.photos.length 
+        userData.photos
         && 
         msg.photo) {
         const photoId = msg.photo[0].file_id;
@@ -117,14 +127,15 @@ bot.on('message', (msg) => {
     
 
     const userId = msg.from.username;
-        const message = `Направление:\n${userData.direction}\n\nТема:\n${userData.topic}\n\nТекст:\n${userData.text}\n\nОтправитель:\n@${msg.chat.username}`;
+        const message = `Направление:\n${userData.direction}\n\nТема:\n${userData.topic}\n\nТекст:\n${userData.text}\n\nОтправитель:\n@${msg.chat.username}\n\nДата публикации:\n${userData.time}`;
 
         //админу
         bot.sendMessage(1046852462, message, { parse_mode: 'Markdown' });
-  
+        if (userData.photos) {
         userData.photos.forEach((photo, index) => {
           bot.sendPhoto(1046852462, photo.file_id, { caption: `Фото ${index + 1}` });
         });
+      }
 
         //Модератору 
         // bot.sendMessage(764246420, message, { parse_mode: 'Markdown' });
@@ -138,7 +149,7 @@ bot.on('message', (msg) => {
         bot.sendMessage(chatId, 'Информация отправлена!', {
           reply_markup: JSON.stringify({
             inline_keyboard: [
-              [{ text: 'Отправить событие', callback_data: 'send_event' }],
+              [{ text: ' Вновь отправить событие', callback_data: 'send_event' }],
             ],
           }),
         });
@@ -227,4 +238,4 @@ bot.on('message', (msg) => {
 bot.on('polling_error', (error) => {
   console.log(error);
 });
-            
+        
